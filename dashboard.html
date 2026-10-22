@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My properties – LandLedger</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>🏠</i><span>LandLedger</span></a><div class="links"><a href="index.html" class="">Home</a><a href="browse.html" class="">Marketplace</a><a href="dashboard.html" class="on">My properties</a><a href="admin.html" class="">Registrar</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><h1>My properties</h1><p class="sub">Manage your listings, offers and purchases.</p><div id="gate"><div class="notice">Connect your wallet to continue.</div></div>
+<div id="dash" style="display:none"><div class="panel"><h2>Properties I own</h2><div id="own"></div></div><div class="panel"><h2>My purchases in escrow</h2><div id="buys"></div></div></div></main>
+<footer>© 2026 LandLedger · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+document.addEventListener("ready",load);
+async function load(){
+  $("#gate").innerHTML="";$("#dash").style.display="block";
+  const n=Number(await vault.propertyCount());let own="",buys="";
+  for(let id=0;id<n;id++){const s=await vault.getSale(id),mine=s[0].toLowerCase()===account.toLowerCase(),buyer=s[3].toLowerCase()===account.toLowerCase();
+    if(!mine&&!buyer)continue;const p=await vault.getProperty(id);
+    const head=`<div class="top"><b>${esc(p[0])}</b><span>#${id} · <a href="property.html?id=${id}" style="color:var(--p2);font-weight:600">View</a></span></div><p style="margin:4px 0">📍 ${esc(p[1])||"—"} · ${esc(p[2])||"—"}</p>`;
+    if(mine){let body;
+      if(s[3]!==ethers.ZeroAddress)body=`<p>Offer of <b>${bot(s[4])}</b> from <span class="mono">${s[3]}</span></p><button class="btn sm" data-c="${id}">Confirm sale</button> <button class="btn sm danger" data-j="${id}">Reject &amp; refund</button>`;
+      else if(s[2])body=`<p>Listed at <b>${bot(s[1])}</b></p><button class="btn sm danger" data-d="${id}">Remove listing</button>`;
+      else body=`<div class="row2"><input id="pr${id}" type="number" step="any" min="0" placeholder="Price in BOT"><button class="btn sm" data-l="${id}">List for sale</button></div>`;
+      own+=`<div class="rec">${head}${body}</div>`}
+    if(buyer)buys+=`<div class="rec">${head}<p>Escrow: <b>${bot(s[4])}</b> · waiting for the owner to confirm</p><button class="btn sm danger" data-x="${id}">Cancel &amp; refund</button></div>`}
+  $("#own").innerHTML=own||'<p class="empty">You don’t own any registered property yet.</p>';
+  $("#buys").innerHTML=buys||'<p class="empty">No purchases in escrow.</p>';
+  const act=(sel,fn,msg,ask)=>document.querySelectorAll(sel).forEach(b=>b.onclick=async()=>{const id=b.dataset[sel.slice(2,3)];if(ask&&!confirm(ask))return;if(await tx(fn(id),msg))load()});
+  act("[data-c]",i=>vault.confirmSale(i),"Sale confirmed","Confirm the sale? Ownership transfers to the buyer and you receive the payment.");
+  act("[data-j]",i=>vault.reject(i),"Offer rejected, buyer refunded");
+  act("[data-d]",i=>vault.delist(i),"Listing removed");
+  act("[data-x]",i=>vault.cancelPurchase(i),"Purchase cancelled, refunded");
+  document.querySelectorAll("[data-l]").forEach(b=>b.onclick=async()=>{const v=$("#pr"+b.dataset.l).value;if(!(Number(v)>0))return toast("Enter a price in BOT",1);if(await tx(vault.listForSale(b.dataset.l,ethers.parseEther(v)),"Property listed"))load()});
+}
+</script></body></html>

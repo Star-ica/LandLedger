@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Property – LandLedger</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>🏠</i><span>LandLedger</span></a><div class="links"><a href="index.html" class="">Home</a><a href="browse.html" class="on">Marketplace</a><a href="dashboard.html" class="">My properties</a><a href="admin.html" class="">Registrar</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><div id="res"><p class="empty">Loading…</p></div></main>
+<footer>© 2026 LandLedger · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+const id=new URLSearchParams(location.search).get("id");let sale;
+(async()=>{
+  if(id===null||!ro){$("#res").innerHTML='<div class="notice">Open a property from the marketplace.</div>';return}
+  try{
+    const p=await ro.getProperty(id);sale=await ro.getSale(id);const n=Number(await ro.historyCount(id));let t="";
+    for(let i=0;i<n;i++){const h=await ro.getHistory(id,i);t+=`<div class="step"><b>${i===0?"Registered to":"Sold to"} <span class="mono">${h[0]}</span></b><div class="meta">${when(h[2])}${i>0?" · "+bot(h[1]):""}</div></div>`}
+    const avail=sale[2]&&sale[3]===ethers.ZeroAddress;
+    $("#res").innerHTML=`<h1>${esc(p[0])}</h1><p class="sub">📍 ${esc(p[1])||"—"} · ${esc(p[2])||"—"} · Property #${id}</p>
+    <div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><div class="price">${sale[2]?bot(sale[1]):"Not for sale"}</div>${sale[2]?(avail?'<span class="badge ok">Available</span>':'<span class="badge off">Offer pending</span>'):""}</div>${avail?'<button class="btn" id="buy">Buy with escrow</button>':""}</div>${avail?'<p class="sub" style="margin:12px 0 0">Your payment is held in escrow until the owner confirms. You can cancel for a full refund before then.</p>':""}</div>
+    <div class="panel"><h2>Details</h2><dl class="kv"><dt>Current owner</dt><dd class="mono">${sale[0]}</dd><dt>Size</dt><dd>${esc(p[2])||"—"}</dd><dt>Document hash</dt><dd class="mono">${esc(p[3])||"—"}</dd><dt>Registered</dt><dd>${when(p[4])}</dd></dl></div>
+    <div class="panel"><h2>Ownership history</h2><div class="tl">${t}</div></div>`;
+    if(avail)$("#buy").onclick=async()=>{if(!vault)return toast("Connect your wallet first.",1);if(await tx(vault.buy(id,{value:sale[1]}),"Offer placed in escrow"))location.reload()};
+  }catch(e){$("#res").innerHTML='<div class="panel"><p class="status bad">✖ Property not found</p></div>'}
+})();
+</script></body></html>

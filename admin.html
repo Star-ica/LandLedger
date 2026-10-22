@@ -1,0 +1,26 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Registrar – LandLedger</title><link rel="stylesheet" href="css/style.css"></head><body>
+<nav class="nav"><a class="logo" href="index.html"><i>🏠</i><span>LandLedger</span></a><div class="links"><a href="index.html" class="">Home</a><a href="browse.html" class="">Marketplace</a><a href="dashboard.html" class="">My properties</a><a href="admin.html" class="on">Registrar</a></div><button class="btn" id="wbtn">Connect wallet</button></nav>
+<main class="wrap"><h1>Registrar</h1><p class="sub">Register verified properties and manage the registry fee.</p><div id="gate"><div class="notice">Connect your wallet to continue.</div></div>
+<div id="adm" style="display:none"><div class="panel"><h2>Register a property</h2><label>Owner wallet</label><input id="ow" placeholder="0x…"><label>Title</label><input id="ti" placeholder="e.g. 3-bedroom bungalow"><label>Location</label><input id="lo" placeholder="e.g. Ikeja, Lagos"><label>Size</label><input id="sz" placeholder="e.g. 600 sqm"><label>Title document hash / IPFS CID</label><input id="dh" placeholder="bafy…"><br><br><button class="btn" id="reg">Register property</button></div>
+<div class="panel"><h2>Registry fee</h2><p>Current fee: <b id="fee"></b> of each sale.</p><div class="row2"><input id="fb" type="number" min="0" max="500" placeholder="Basis points (100 = 1%, max 500)"><button class="btn" id="sf">Update fee</button></div></div>
+<div class="panel"><h2>All properties</h2><div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Title</th><th>Owner</th><th>Status</th></tr></thead><tbody id="pl"></tbody></table></div></div></div></main>
+<footer>© 2026 LandLedger · Built on BOT Chain<br><a href="https://botchain.ai" target="_blank" rel="noopener">BOT Chain Website</a> · <a href="https://scan.bohr.life" target="_blank" rel="noopener">BOT Chain Explorer</a></footer><div id="toast"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script><script src="js/app.js"></script>
+<script>
+document.addEventListener("ready",async()=>{
+  if((await vault.admin()).toLowerCase()!==account.toLowerCase()){$("#gate").innerHTML='<div class="notice">Only the registrar (contract admin) can use this page.</div>';return}
+  $("#gate").innerHTML="";$("#adm").style.display="block";list();
+});
+async function list(){
+  $("#fee").textContent=(Number(await vault.feeBps())/100)+"%";
+  const n=Number(await vault.propertyCount());let h="";
+  for(let i=n-1;i>=0;i--){const p=await vault.getProperty(i),s=await vault.getSale(i);
+    h+=`<tr><td>${i}</td><td><b>${esc(p[0])}</b><div style="color:var(--mut);font-size:13px">${esc(p[1])}</div></td><td class="mono">${s[0]}</td><td>${s[3]!==ethers.ZeroAddress?'<span class="badge off">Offer pending</span>':s[2]?'<span class="badge ok">For sale</span>':'<span class="badge off">Not listed</span>'}</td></tr>`}
+  $("#pl").innerHTML=h||'<tr><td colspan="4" class="empty">No properties registered yet.</td></tr>';
+}
+$("#reg").onclick=async()=>{
+  const o=$("#ow").value.trim(),t=$("#ti").value.trim();
+  if(!ethers.isAddress(o)||!t)return toast("Enter a valid owner address and a title",1);
+  if(await tx(vault.registerProperty(o,t,$("#lo").value.trim(),$("#sz").value.trim(),$("#dh").value.trim()),"Property registered")){["ow","ti","lo","sz","dh"].forEach(x=>$("#"+x).value="");list()}
+};
+$("#sf").onclick=async()=>{const v=Number($("#fb").value);if(!(v>=0&&v<=500))return toast("Enter 0 to 500 basis points",1);if(await tx(vault.setFee(v),"Fee updated"))list()};
+</script></body></html>
