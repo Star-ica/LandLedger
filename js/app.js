@@ -1,6 +1,6 @@
-const CHAIN={id:968,hex:"0x3c8",name:"BOT Chain Testnet",symbol:"BOT",rpc:"https://rpc.bohr.life",explorer:"https://scan.bohr.life",website:"https://botchain.ai"};
+const CHAIN={id:677,hex:"0x2a5",name:"BOT Chain",symbol:"BOT",rpc:"https://rpc.botchain.ai",explorer:"https://scan.botchain.ai",website:"https://botchain.ai"};
 // TODO: replace with your deployed LandLedger address
-const CONTRACT_ADDRESS="0x78Dd4033898D84381157d501A94dFf60fd353f90";
+const CONTRACT_ADDRESS="0x57b8f91b118Cb58493F3C966264a8D1c9db2494a";
 const ABI=["function admin() view returns (address)","function feeBps() view returns (uint256)","function setFee(uint256 bps)","function registerProperty(address owner,string title,string location,string size,string docHash) returns (uint256)","function listForSale(uint256 id,uint256 priceWei)","function delist(uint256 id)","function buy(uint256 id) payable","function cancelPurchase(uint256 id)","function reject(uint256 id)","function confirmSale(uint256 id)","function propertyCount() view returns (uint256)","function getProperty(uint256 id) view returns (string,string,string,string,uint256)","function getSale(uint256 id) view returns (address,uint256,bool,address,uint256)","function historyCount(uint256 id) view returns (uint256)","function getHistory(uint256 id,uint256 i) view returns (address,uint256,uint256)","function listings() view returns (uint256[])","function propertiesOf(address a) view returns (uint256[])"];
 let signer,account,vault;
 const ro=/^0x0+$/.test(CONTRACT_ADDRESS)?null:new ethers.Contract(CONTRACT_ADDRESS,ABI,new ethers.JsonRpcProvider(CHAIN.rpc));
